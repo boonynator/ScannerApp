@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">ScannerApp</string>
+    <string name="tab_text_1">Scanner</string>
+    <string name="tab_text_2">History</string>
+    <string name="open_camera">Open camera</string>
+</resources>
