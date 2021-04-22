@@ -1,19 +1,24 @@
 package com.steven.scannerapp.ui.scanner
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Choreographer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleOwner
 import com.steven.scannerapp.R
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -23,6 +28,8 @@ class ScannerFragment : Fragment() {
 
     @Inject
     lateinit var scannerViewModel: ScannerViewModel
+
+    private lateinit var cameraButton: ImageButton
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,10 +55,14 @@ class ScannerFragment : Fragment() {
                 }
             }
 
-        val cameraButton = view.findViewById<ImageButton>(R.id.imagebutton_start_camera)
+        cameraButton = view.findViewById(R.id.imagebutton_start_camera)
         cameraButton.setOnClickListener {
-            activityResultLauncher.launch(Manifest.permission.CAMERA)
-            openCamera(view)
+            if (!hasPermission()) {
+                activityResultLauncher.launch(Manifest.permission.CAMERA)
+            } else {
+                openCamera(view)
+                Log.d("ScannerFragment", "blubb")
+            }
         }
     }
 
@@ -63,18 +74,36 @@ class ScannerFragment : Fragment() {
 
             val preview = Preview.Builder()
                 .build()
-                .also { it.setSurfaceProvider { viewFinder.surfaceProvider } }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+                cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, preview)
+
+                preview.setSurfaceProvider(viewFinder.surfaceProvider)
+
+                viewFinder.visibility = View.VISIBLE
+                cameraButton.visibility = View.GONE
+                Toast.makeText(requireContext(), "Camera started!", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Log.e("ScannerFragment", "Use case binding failed", e)
+                Toast.makeText(
+                    requireContext(),
+                    "Camera could not be initialized.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                viewFinder.visibility = View.GONE
+                cameraButton.visibility = View.VISIBLE
             }
         }, ContextCompat.getMainExecutor(requireContext()))
     }
+
+    private fun hasPermission(): Boolean = ContextCompat.checkSelfPermission(
+        requireContext(),
+        Manifest.permission.CAMERA
+    ) == PackageManager.PERMISSION_GRANTED
 
     companion object {
         /**
