@@ -9,8 +9,8 @@ import javax.inject.Inject
 @Entity
 data class Item @Inject constructor(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val name: String,
+    val name: String?,
     val code: String,
     val date: Date,
-    val url: URL
+    val url: URL?
 )
