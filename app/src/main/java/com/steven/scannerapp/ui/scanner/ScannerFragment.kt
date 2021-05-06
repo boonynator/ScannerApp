@@ -2,6 +2,10 @@ package com.steven.scannerapp.ui.scanner
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.BlendMode
+import android.graphics.BlendModeColorFilter
+import android.graphics.PorterDuff
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
@@ -9,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
@@ -17,8 +22,6 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
-import androidx.viewpager2.widget.ViewPager2
-import com.google.mlkit.vision.barcode.Barcode
 import com.steven.scannerapp.R
 import com.steven.scannerapp.data.api.BarcodeAnalyzer
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,6 +40,7 @@ class ScannerFragment : Fragment() {
 
     private lateinit var cameraButton: ImageButton
     private lateinit var backgroundExecutor: ExecutorService
+    private lateinit var successProgressBar: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -73,6 +77,19 @@ class ScannerFragment : Fragment() {
                 Log.d(TAG, "Initiating opening of camera")
             }
         }
+
+        successProgressBar = view.findViewById(R.id.success_loading)
+        // set progressbar color
+        val progressBarColor = resources.getColor(R.color.design_default_color_primary_dark, null)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            successProgressBar.indeterminateDrawable.colorFilter =
+                BlendModeColorFilter(progressBarColor, BlendMode.MULTIPLY)
+        } else {
+            successProgressBar.indeterminateDrawable.setColorFilter(
+                progressBarColor,
+                PorterDuff.Mode.MULTIPLY
+            )
+        }
     }
 
     private fun openCamera(view: View) {
@@ -85,6 +102,7 @@ class ScannerFragment : Fragment() {
         val rotation = viewFinder.display.rotation
         cameraProviderFuture.addListener(Runnable {
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             val preview = Preview.Builder()
                 .setTargetAspectRatio(aspectRatio)
@@ -103,11 +121,10 @@ class ScannerFragment : Fragment() {
                 .build()
                 .also {
                     it.setAnalyzer(backgroundExecutor, BarcodeAnalyzer { barcode ->
-                        navigateToSuccess(barcode)
+                        openSuccessDialog(barcode)
+                        Log.d(TAG, "Dialog should've opened.")
                     })
                 }
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
                 cameraProvider.unbindAll()
@@ -123,7 +140,6 @@ class ScannerFragment : Fragment() {
 
                 viewFinder.visibility = View.VISIBLE
                 cameraButton.visibility = View.GONE
-                Toast.makeText(requireContext(), "Camera started!", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Log.e("ScannerFragment", "Use case binding failed", e)
                 Toast.makeText(
@@ -138,9 +154,11 @@ class ScannerFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    private fun navigateToSuccess(barcode: String) {
-        val viewPager: ViewPager2 = requireActivity().findViewById(R.id.view_pager)
-        viewPager.currentItem = 2
+    private fun openSuccessDialog(barcode: String) {
+        successProgressBar.visibility = View.VISIBLE
+        val successDialog = ScanSuccessDialog(barcode)
+        successDialog.show(parentFragmentManager, "testDialog")
+        //successProgressBar.visibility = View.GONE
     }
 
     private fun aspectRatio(width: Int, height: Int): Int {

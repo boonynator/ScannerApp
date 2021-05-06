@@ -12,12 +12,15 @@ import com.steven.scannerapp.data.model.Item
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.*
-import javax.inject.Inject
 
 typealias BarcodeListener = (barcode: String) -> Unit
 
-class BarcodeAnalyzer @Inject constructor(private val barcodeListener: BarcodeListener) :
+class BarcodeAnalyzer(private val barcodeListener: BarcodeListener? = null) :
     ImageAnalysis.Analyzer {
+
+    private val listeners = ArrayList<BarcodeListener>().apply { barcodeListener?.let { add(it) } }
+
+    private lateinit var item: Item
 
     @ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
@@ -34,12 +37,10 @@ class BarcodeAnalyzer @Inject constructor(private val barcodeListener: BarcodeLi
             val scanner = BarcodeScanning.getClient(barcodeScannerOptions)
             scanner.process(image)
                 .addOnSuccessListener {
-                    Log.d("ImageAnalyzer", "Image was successfully scanned!")
                     prepareItem(it)
                 }.addOnFailureListener {
-                    Log.d("ImageAnalyzer", "Image could not be scanned.")
+                    Log.e("ImageAnalyzer", "Image could not be scanned.")
                 }.addOnCompleteListener {
-                    Log.d("ImageAnalyzer", "Task finished.")
                     imageProxy.close()
                 }
         }
@@ -55,10 +56,10 @@ class BarcodeAnalyzer @Inject constructor(private val barcodeListener: BarcodeLi
             try {
                 scannedUrl = URL(barcodeValue)
             } catch (e: MalformedURLException) {
-                Log.d(TAG, "Raw value was: $barcodeValue")
+                Log.d(TAG, "Code does not contain url")
             }
             val currentTime = Date(System.currentTimeMillis())
-            val item =
+            item =
                 Item(code = barcodeValue!!, url = scannedUrl, date = currentTime, name = null)
             Log.d("ImageAnalyzer", "Value: $item")
         }

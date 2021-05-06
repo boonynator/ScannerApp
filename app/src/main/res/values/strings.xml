@@ -3,4 +3,6 @@
     <string name="tab_text_1">Scanner</string>
     <string name="tab_text_2">History</string>
     <string name="open_camera">Open camera</string>
+    <string name="close_camera">Close camera</string>
+    <string name="flash_button">Flash Button</string>
 </resources>

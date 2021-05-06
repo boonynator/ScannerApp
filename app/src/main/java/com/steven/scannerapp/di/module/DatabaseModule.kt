@@ -24,6 +24,8 @@ object DatabaseModule {
         context.applicationContext,
         ScannerAppDatabase::class.java,
         "item_database"
-    ).build()
+    )
+        .fallbackToDestructiveMigration()
+        .build()
 
 }
