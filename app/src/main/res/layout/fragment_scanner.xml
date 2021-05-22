@@ -19,11 +19,10 @@
         android:id="@+id/success_loading"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/camera_layout"
@@ -43,14 +42,14 @@
             app:scaleType="fitCenter" />
 
         <ImageButton
-            android:src=""
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="10dp"
+            android:background=""
             android:contentDescription="@string/flash_button"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:src="@drawable/ic_baseline_flash_off_24"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_margin="20dp"
-            />
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
